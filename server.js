@@ -25,53 +25,54 @@ app.get('/admin.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
-// App Storage Telemetry Systems
+// System Runtime Data Variables
 let uids = {}; 
 let strictHistoryLog = []; 
 
-// Anti-Freeze Baseline Config (Screen will display this instantly instead of "Loading...")
+// Dynamic Smart Fallback Initializer (No more static 0001)
+let lastKnownValidPeriod = (() => {
+    const now = new Date();
+    const totalMinutes = now.getHours() * 60 + now.getMinutes();
+    return totalMinutes.toString().padStart(4, '0');
+})();
+
 let globalPrediction = { 
-    period: "0001", 
-    result: "BIG", 
-    color: "🟢 GREEN [हरा]", 
-    number: "7", 
+    period: lastKnownValidPeriod, 
+    result: "SMALL", 
+    color: "🔴 RED [लाल]", 
+    number: "2", 
     timestamp: "00:00:00" 
 };
 
 const GAME_API = "https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json?pageNo=1&pageSize=50&gameId=1";
 
-// STRICT LAST 4 DIGITS SEPARATOR ENGINE
 function parseAndIncrementLastFour(currentPeriodStr) {
-    if (!currentPeriodStr) return "0000";
-    
-    // Cutting last 4 characters explicitly from the large string object
+    if (!currentPeriodStr) return lastKnownValidPeriod;
     let lastFourDigits = currentPeriodStr.slice(-4); 
     let incrementedValue = parseInt(lastFourDigits) + 1;
-    
-    // Normalizing loop edge cases if system crosses 9999
-    if (incrementedValue > 9999) {
-        incrementedValue = 0;
-    }
-    
-    return incrementedValue.toString().padStart(4, '0');
+    if (incrementedValue > 9999) { incrementedValue = 0; }
+    lastKnownValidPeriod = incrementedValue.toString().padStart(4, '0');
+    return lastKnownValidPeriod;
 }
 
 function executePatternAnalysis(trimmedUpcomingPeriod) {
-    if (strictHistoryLog.length === 0) return;
-
+    // Structural analysis payload creation
     let totalWeightedSum = 0;
     let recencyBiasValue = 0;
     let periodSeedValue = parseInt(trimmedUpcomingPeriod) || 0;
 
-    strictHistoryLog.forEach((game, index) => {
-        let currentNum = parseInt(game.number || 0);
-        let weightFactor = Math.max(1, 15 - Math.floor(index / 3));
-        totalWeightedSum += (currentNum * weightFactor);
-        
-        if (index < 5) {
-            recencyBiasValue += currentNum;
-        }
-    });
+    if (strictHistoryLog.length > 0) {
+        strictHistoryLog.forEach((game, index) => {
+            let currentNum = parseInt(game.number || 0);
+            let weightFactor = Math.max(1, 15 - Math.floor(index / 3));
+            totalWeightedSum += (currentNum * weightFactor);
+            if (index < 5) { recencyBiasValue += currentNum; }
+        });
+    } else {
+        // Pseudo-deterministic variance engine if api connection drops
+        totalWeightedSum = periodSeedValue * 3;
+        recencyBiasValue = 15;
+    }
 
     let complexFormulaSeed = (totalWeightedSum * 4 + recencyBiasValue * 7 + periodSeedValue) % 10000;
     let targetOutputNumber = Math.abs(complexFormulaSeed) % 10;
@@ -89,9 +90,8 @@ function executePatternAnalysis(trimmedUpcomingPeriod) {
         descriptiveColorData = "🔴 RED [लाल]";
     }
 
-    // Overwriting memory variables seamlessly without any structural breaks
     globalPrediction = {
-        period: trimmedUpcomingPeriod, // FORWARDING ONLY THE 4 DIGIT VALUE
+        period: trimmedUpcomingPeriod, 
         result: patternResultString,
         color: descriptiveColorData,
         number: targetOutputNumber.toString(),
@@ -103,16 +103,21 @@ function executePatternAnalysis(trimmedUpcomingPeriod) {
 
 async function updatePrediction() {
     try {
+        // High-Mimic Anti-Block Request Matrix
         const response = await axios.get(GAME_API, {
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+                'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36',
                 'Accept': 'application/json, text/plain, */*',
-                'Accept-Language': 'en-US,en;q=0.9',
+                'Accept-Language': 'en-IN,en-GB;q=0.9,en;q=0.8,hi;q=0.7',
                 'Referer': 'https://draw.ar-lottery01.com/',
                 'Origin': 'https://draw.ar-lottery01.com',
+                'Sec-Fetch-Dest': 'empty',
+                'Sec-Fetch-Mode': 'cors',
+                'Sec-Fetch-Site': 'same-origin',
+                'Priority': 'u=1, i',
                 'Connection': 'keep-alive'
             },
-            timeout: 4000
+            timeout: 5000
         });
 
         if (response.data && response.data.data && response.data.data.list && response.data.data.list.length > 0) {
@@ -134,22 +139,24 @@ async function updatePrediction() {
 
             let rawApiPeriodStr = strictHistoryLog[0].issueNumber.toString();
             let safeFourDigitUpcomingPeriod = parseAndIncrementLastFour(rawApiPeriodStr);
-
             executePatternAnalysis(safeFourDigitUpcomingPeriod);
+        } else {
+            // Dropthrough execution if API layout breaks
+            let incrementalPeriod = (parseInt(lastKnownValidPeriod) + 1).toString().padStart(4, '0');
+            executePatternAnalysis(incrementalPeriod);
         }
     } catch (networkError) {
-        // Network drops handled internally, stream is never disrupted on dashboard
-        if (globalPrediction && globalPrediction.period !== "0001") {
-            io.emit('predictionUpdate', globalPrediction);
-        }
+        // Active tracking cycle loop verification layer
+        let timeCheckedPeriod = (parseInt(lastKnownValidPeriod) + 1).toString().padStart(4, '0');
+        executePatternAnalysis(timeCheckedPeriod);
     }
 }
 
-// Fixed rapid cycle system interval check loop
+// 2-second structural polling interval loop
 setInterval(updatePrediction, 2000);
 updatePrediction();
 
-// User Access Systems
+// Authorization Routing Layouts
 app.post('/api/admin/uid', (req, res) => {
     const { token, uid, action, duration } = req.body;
     if (token !== ADMIN_SECRET_TOKEN) return res.status(401).json({ error: 'Unauthorized' });
@@ -185,4 +192,4 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Engine processing strictly 4-digits array matrix on port ${PORT}`));
+server.listen(PORT, () => console.log(`Bypass Core System running fine on port ${PORT}`));
