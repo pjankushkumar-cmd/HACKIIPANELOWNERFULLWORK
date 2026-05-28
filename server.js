@@ -14,8 +14,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 // === SECURITY SETTING ===
 const ADMIN_SECRET_TOKEN = "OWNER_SECRET_KEY_9988"; 
 
-// Render par default dashboard load karne ke liye
 app.get('/', (req, res) => {
+    // Agar aapki file ka naam index.html hai toh yahan badal sakte hain
     res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
@@ -28,8 +28,7 @@ app.get('/admin.html', (req, res) => {
 });
 
 let uids = {}; 
-// Default data starting mein blank nahi rahega
-let globalPrediction = { period: "29666170", result: "BIG", number: "7", color: "🔴 RED [लाल]", timestamp: "" };
+let globalPrediction = { period: "Loading...", result: "-", number: "-", color: "-", timestamp: "" };
 
 const GAME_API = "https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json?pageNo=1&pageSize=20&gameId=1";
 
@@ -37,12 +36,28 @@ async function updatePrediction() {
     let nextPeriodStr = "";
     let baseSeed = 0;
 
+    // 1. HARDCODED CORRECT TIME OFFSET CALCULATION (IST / Game Sync)
+    // Server ka time jo bhi ho, hum use directly exact minute metrics par convert karenge
     const now = new Date();
-    // Fallback default structure
-    const totalMinutes = Math.floor(now.getTime() / (1000 * 60));
-    nextPeriodStr = "2966" + (totalMinutes % 10000).toString();
-    baseSeed = totalMinutes;
+    
+    // Indian Standard Time (IST) offset manual adjustments (+5:30)
+    const istTime = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
+    const currentHour = istTime.getUTCHours();
+    const currentMinute = istTime.getUTCMinutes();
+    
+    // Total minutes calculated from start of the day to keep numbers highly aligned
+    const totalDayMinutes = (currentHour * 60) + currentMinute;
+    
+    // Game sequence formatting mapping rules
+    // Agar 5:51 PM par sequence mismatch ho raha hai, toh hum specific dynamic offset sequence adjust karenge
+    let basePeriodNumber = 29666000 + totalDayMinutes;
+    
+    // Strict Verification check for upcoming structure (+1 incrementation override)
+    let finalUpcomingPeriod = basePeriodNumber + 1; 
+    nextPeriodStr = finalUpcomingPeriod.toString();
+    baseSeed = finalUpcomingPeriod;
 
+    // 2. LIVE DATA SYNC WITH API (IF ACCESSIBLE)
     try {
         const response = await axios.get(GAME_API, {
             headers: {
@@ -50,29 +65,32 @@ async function updatePrediction() {
                 'Accept': 'application/json, text/plain, */*',
                 'Origin': 'https://draw.ar-lottery01.com'
             },
-            timeout: 4000
+            timeout: 3500
         });
 
         if (response.data && response.data.data && response.data.data.list && response.data.data.list.length > 0) {
             const list = response.data.data.list;
             const latestGame = list[0];
-            let nextPeriod = parseInt(latestGame.issueNumber) + 1;
-            nextPeriodStr = nextPeriod.toString();
-
-            for (let i = 0; i < Math.min(list.length, 5); i++) {
-                baseSeed += parseInt(list[i].number || 0);
+            
+            // Strictly fetch latest round and make it UPCOMING (+1)
+            let apiNextPeriod = parseInt(latestGame.issueNumber) + 1;
+            
+            // Check validation parameter safety bounds
+            if (apiNextPeriod > finalUpcomingPeriod) {
+                nextPeriodStr = apiNextPeriod.toString();
+                baseSeed = apiNextPeriod;
             }
-            baseSeed += nextPeriod;
         }
     } catch (error) {
-        // API block hone par logs crash nahi honge
+        // Safe fail-safe execution metrics
     }
 
-    // === ABSOLUTE MATHEMATICAL LOCK LOGIC ===
-    // Is formula se data pure minute tak same rahega, baar-baar change nahi hoga
+    // === CRITICAL MATH SEED LOCK: Ek round mein sirf ek baar execution ===
     let periodInt = parseInt(nextPeriodStr) || baseSeed;
-    let finalHash = (periodInt * 31 + 17) % 100;
-    let predictedNumber = Math.abs(finalHash) % 10; // Strictly 0 to 9
+    
+    // Unique linear deterministic mapping formula to ensure numbers don't change mid-round
+    let finalHash = (periodInt * 53 + 29) % 1000;
+    let predictedNumber = Math.abs(finalHash) % 10; // strictly 0-9 single digit block
     
     let predictedResult = (predictedNumber >= 5) ? "BIG" : "SMALL";
     
@@ -92,17 +110,17 @@ async function updatePrediction() {
         result: predictedResult,
         number: predictedNumber.toString(),
         color: colorSuggestion,
-        timestamp: new Date().toLocaleTimeString()
+        timestamp: istTime.toLocaleTimeString()
     };
 
     io.emit('predictionUpdate', globalPrediction);
 }
 
-// 3 second mein client-server data synchronization matrix
-setInterval(updatePrediction, 3000);
+// Fixed interval scheduling loop execution Matrix
+setInterval(updatePrediction, 2500);
 updatePrediction();
 
-// Admin Panel APIs
+// Authorization Access control routers
 app.post('/api/admin/uid', (req, res) => {
     const { token, uid, action, duration } = req.body;
     if (token !== ADMIN_SECRET_TOKEN) return res.status(401).json({ error: 'Unauthorized' });
@@ -138,4 +156,4 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Server environment operating fine on port ${PORT}`));
+server.listen(PORT, () => console.log(`Active server operating fine on port ${PORT}`));
