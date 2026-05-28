@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
-    <title>Premium VIP Monitor Dashboard</title>
+    <title>VIP Premium Monitor Panel</title>
     <script src="/socket.io/socket.io.js"></script>
     <style>
         .timer-box {
@@ -43,7 +43,7 @@
         .num-badge {
             background: linear-gradient(135deg, #00e5ff, #0088cc);
             color: #000;
-            padding: 2px 14px;
+            padding: 4px 16px;
             border-radius: 6px;
             font-weight: 900;
             font-size: 24px;
@@ -66,19 +66,19 @@
 
         <div class="prediction-box" style="border-color: var(--neon-cyan); box-shadow: 0 0 20px rgba(0, 229, 255, 0.2);">
             <h3 style="margin: 0 0 10px 0; font-size: 13px; color:#ff0055; letter-spacing: 1.5px; font-weight: bold;">⚡ UPCOMING NEXT ROUND ⚡</h3>
-            <h2 id="periodId" style="font-size: 32px; margin: 5px 0; color: #fff;">Period: <span style="color: var(--neon-cyan);">Loading...</span></h2>
+            <h2 id="periodId" style="font-size: 30px; margin: 5px 0; color: #fff;">Period: <span style="color: var(--neon-cyan);">Syncing...</span></h2>
             
             <hr style="border:0; border-top: 1px solid rgba(255,255,255,0.1); margin: 15px 0;">
 
-            <div style="font-size: 26px; margin: 15px 0; font-weight: bold; letter-spacing: 1px;">
+            <div style="font-size: 24px; margin: 15px 0; font-weight: bold; letter-spacing: 1px;">
                 ANALYSIS RESULT: <span id="predictResult" style="color:var(--gold); text-shadow: 0 0 15px rgba(255,204,0,0.6);">-</span>
             </div>
-            
+
             <div style="font-size: 18px; margin: 15px 0; font-weight: bold; color: #fff;">
                 TARGET NUMBER: <span id="predictNumber" class="num-badge">-</span>
             </div>
-
-            <div style="font-size: 18px; font-weight: bold; color: #fff; margin-top: 12px;">
+            
+            <div style="font-size: 18px; font-weight: bold; color: #fff; margin-top: 5px;">
                 COLOR PATTERN: <span id="colorResult">-</span>
             </div>
         </div>
@@ -93,6 +93,7 @@
         if(!uid) { window.location.href = 'index.html'; }
         document.getElementById('myUidDisplay').innerText = uid || "-";
 
+        // Security check loop
         async function runSecurityLoop() {
             try {
                 const res = await fetch('/api/user/verify', {
@@ -102,7 +103,7 @@
                 });
                 const data = await res.json();
                 if(data.status !== 'approved') {
-                    alert('Session terminated or expired by Management Control!');
+                    alert('Session terminated or expired by Admin Control!');
                     localStorage.removeItem('user_uid');
                     window.location.href = 'index.html';
                 }
@@ -110,20 +111,23 @@
         }
         setInterval(runSecurityLoop, 5000);
 
+        // Timer calculation logic matching system clock
         function startLocalTimer() {
             setInterval(() => {
                 const now = new Date();
                 const seconds = now.getSeconds();
                 const remainingSeconds = 60 - seconds;
+                
                 let displaySec = remainingSeconds < 10 ? "0" + remainingSeconds : remainingSeconds;
                 document.getElementById('timerDisplay').innerText = `⏳ Next Period Update In: 00:${displaySec}s`;
             }, 1000);
         }
         startLocalTimer();
 
+        // Fixed Realtime Sync Engine via Sockets
         const socket = io();
         socket.on('predictionUpdate', (data) => {
-            if(data && data.period) {
+            if(data && data.period && data.period !== "Syncing...") {
                 document.getElementById('periodId').innerHTML = `Period: <span style="color:var(--neon-cyan); text-shadow: 0 0 10px var(--neon-cyan);">${data.period}</span>`;
                 document.getElementById('predictNumber').innerText = data.number || "-";
                 document.getElementById('colorResult').innerHTML = data.color || "-";
