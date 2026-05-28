@@ -25,41 +25,49 @@ app.get('/admin.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
-// System Runtime Data Variables
+// Production Storage Layers
 let uids = {}; 
 let strictHistoryLog = []; 
 
-// Dynamic Smart Fallback Initializer (No more static 0001)
-let lastKnownValidPeriod = (() => {
+// Safe Runtime Wallclock Generator (Extracts current period string automatically)
+function getCurrentWallclockPeriod() {
     const now = new Date();
     const totalMinutes = now.getHours() * 60 + now.getMinutes();
     return totalMinutes.toString().padStart(4, '0');
-})();
+}
 
 let globalPrediction = { 
-    period: lastKnownValidPeriod, 
-    result: "SMALL", 
-    color: "🔴 RED [लाल]", 
-    number: "2", 
+    period: getCurrentWallclockPeriod(), 
+    result: "BIG", 
+    color: "🟢 GREEN [हरा]", 
+    number: "7", 
     timestamp: "00:00:00" 
 };
 
 const GAME_API = "https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json?pageNo=1&pageSize=50&gameId=1";
 
-function parseAndIncrementLastFour(currentPeriodStr) {
-    if (!currentPeriodStr) return lastKnownValidPeriod;
-    let lastFourDigits = currentPeriodStr.slice(-4); 
-    let incrementedValue = parseInt(lastFourDigits) + 1;
-    if (incrementedValue > 9999) { incrementedValue = 0; }
-    lastKnownValidPeriod = incrementedValue.toString().padStart(4, '0');
-    return lastKnownValidPeriod;
+// STRICT WALLCLOCK DYNAMIC INCREMENTOR (+1 UPCOMING LOGIC)
+function calculateUpcomingPeriod(currentApiPeriodStr) {
+    let targetFourDigits = "";
+    
+    if (currentApiPeriodStr && currentApiPeriodStr.length >= 4) {
+        targetFourDigits = currentApiPeriodStr.slice(-4);
+    } else {
+        targetFourDigits = getCurrentWallclockPeriod();
+    }
+
+    let incrementedValue = parseInt(targetFourDigits) + 1;
+    if (incrementedValue > 9999) {
+        incrementedValue = 0;
+    }
+    
+    return incrementedValue.toString().padStart(4, '0');
 }
 
-function executePatternAnalysis(trimmedUpcomingPeriod) {
-    // Structural analysis payload creation
+function executePatternAnalysis(upcomingPeriodStr) {
     let totalWeightedSum = 0;
     let recencyBiasValue = 0;
-    let periodSeedValue = parseInt(trimmedUpcomingPeriod) || 0;
+    let periodSeedValue = parseInt(upcomingPeriodStr) || 0;
 
     if (strictHistoryLog.length > 0) {
         strictHistoryLog.forEach((game, index) => {
@@ -69,9 +77,8 @@ function executePatternAnalysis(trimmedUpcomingPeriod) {
             if (index < 5) { recencyBiasValue += currentNum; }
         });
     } else {
-        // Pseudo-deterministic variance engine if api connection drops
-        totalWeightedSum = periodSeedValue * 3;
-        recencyBiasValue = 15;
+        totalWeightedSum = periodSeedValue * 7;
+        recencyBiasValue = 23;
     }
 
     let complexFormulaSeed = (totalWeightedSum * 4 + recencyBiasValue * 7 + periodSeedValue) % 10000;
@@ -91,7 +98,7 @@ function executePatternAnalysis(trimmedUpcomingPeriod) {
     }
 
     globalPrediction = {
-        period: trimmedUpcomingPeriod, 
+        period: upcomingPeriodStr, // PURE STRICT +1 UPCOMING FOUR DIGIT VALUE
         result: patternResultString,
         color: descriptiveColorData,
         number: targetOutputNumber.toString(),
@@ -103,21 +110,16 @@ function executePatternAnalysis(trimmedUpcomingPeriod) {
 
 async function updatePrediction() {
     try {
-        // High-Mimic Anti-Block Request Matrix
         const response = await axios.get(GAME_API, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36',
                 'Accept': 'application/json, text/plain, */*',
-                'Accept-Language': 'en-IN,en-GB;q=0.9,en;q=0.8,hi;q=0.7',
+                'Accept-Language': 'en-IN,en-GB;q=0.9,hi;q=0.7',
                 'Referer': 'https://draw.ar-lottery01.com/',
                 'Origin': 'https://draw.ar-lottery01.com',
-                'Sec-Fetch-Dest': 'empty',
-                'Sec-Fetch-Mode': 'cors',
-                'Sec-Fetch-Site': 'same-origin',
-                'Priority': 'u=1, i',
                 'Connection': 'keep-alive'
             },
-            timeout: 5000
+            timeout: 4000
         });
 
         if (response.data && response.data.data && response.data.data.list && response.data.data.list.length > 0) {
@@ -138,25 +140,23 @@ async function updatePrediction() {
             }
 
             let rawApiPeriodStr = strictHistoryLog[0].issueNumber.toString();
-            let safeFourDigitUpcomingPeriod = parseAndIncrementLastFour(rawApiPeriodStr);
-            executePatternAnalysis(safeFourDigitUpcomingPeriod);
+            let safeUpcomingPeriod = calculateUpcomingPeriod(rawApiPeriodStr);
+            executePatternAnalysis(safeUpcomingPeriod);
         } else {
-            // Dropthrough execution if API layout breaks
-            let incrementalPeriod = (parseInt(lastKnownValidPeriod) + 1).toString().padStart(4, '0');
-            executePatternAnalysis(incrementalPeriod);
+            let backupWallclockPeriod = calculateUpcomingPeriod(null);
+            executePatternAnalysis(backupWallclockPeriod);
         }
     } catch (networkError) {
-        // Active tracking cycle loop verification layer
-        let timeCheckedPeriod = (parseInt(lastKnownValidPeriod) + 1).toString().padStart(4, '0');
-        executePatternAnalysis(timeCheckedPeriod);
+        let backupWallclockPeriod = calculateUpcomingPeriod(null);
+        executePatternAnalysis(backupWallclockPeriod);
     }
 }
 
-// 2-second structural polling interval loop
+// 2-second fast structural evaluation intervals
 setInterval(updatePrediction, 2000);
 updatePrediction();
 
-// Authorization Routing Layouts
+// Authorization Core Processing Controls
 app.post('/api/admin/uid', (req, res) => {
     const { token, uid, action, duration } = req.body;
     if (token !== ADMIN_SECRET_TOKEN) return res.status(401).json({ error: 'Unauthorized' });
@@ -192,4 +192,4 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Bypass Core System running fine on port ${PORT}`));
+server.listen(PORT, () => console.log(`Wallclock Sync System operational on port ${PORT}`));
