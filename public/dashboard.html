@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
-    <title>WinGo 1M Premium HacKII </title>
+    <title>Premium VIP Monitor Dashboard</title>
     <script src="/socket.io/socket.io.js"></script>
     <style>
         .timer-box {
@@ -46,36 +46,36 @@
             padding: 2px 14px;
             border-radius: 6px;
             font-weight: 900;
-            font-size: 22px;
-            box-shadow: 0 0 10px var(--neon-cyan);
+            font-size: 24px;
+            box-shadow: 0 0 12px var(--neon-cyan);
             display: inline-block;
         }
     </style>
 </head>
 <body>
     <div class="container pulse-text">
-        <h1 class="hack-title">@hackii_sureshote</h1>
-        <h2>🔮  WINGO NUMBER PREMIUM TOOL 🔮</h2>
+        <h1 class="hack-title" style="color: #ffcc00; text-shadow: 0 0 15px #ffcc00;">👑 VIP PREMIUM PANEL 👑</h1>
+        <h2>LIVE REALTIME TREND MONITOR</h2>
         
         <p style="font-size: 13px; margin: 0; color: #ccc;">
             <span class="blinking-dot"></span> Status: <span style="color:var(--neon-green); font-weight:bold;">LIVE SYNC ACTIVE</span>
         </p>
-        <p style="font-size: 13px; margin: 5px 0 0 0;">Active User UID: <span id="myUidDisplay" style="color:var(--neon-cyan); font-weight:bold;">-</span></p>
+        <p style="font-size: 13px; margin: 5px 0 0 0;">Authorized Member UID: <span id="myUidDisplay" style="color:var(--neon-cyan); font-weight:bold;">-</span></p>
 
         <div class="timer-box" id="timerDisplay">⏳ Next Period Update In: 00:00s</div>
 
         <div class="prediction-box" style="border-color: var(--neon-cyan); box-shadow: 0 0 20px rgba(0, 229, 255, 0.2);">
             <h3 style="margin: 0 0 10px 0; font-size: 13px; color:#ff0055; letter-spacing: 1.5px; font-weight: bold;">⚡ UPCOMING NEXT ROUND ⚡</h3>
-            <h2 id="periodId" style="font-size: 28px; margin: 5px 0; color: #fff;">Period: <span style="color: var(--neon-cyan);">Loading...</span></h2>
+            <h2 id="periodId" style="font-size: 32px; margin: 5px 0; color: #fff;">Period: <span style="color: var(--neon-cyan);">Loading...</span></h2>
             
             <hr style="border:0; border-top: 1px solid rgba(255,255,255,0.1); margin: 15px 0;">
 
-            <div style="font-size: 24px; margin: 15px 0; font-weight: bold; letter-spacing: 1px;">
-                RECOMMENDED: <span id="predictResult" style="color:var(--gold); text-shadow: 0 0 15px rgba(255,204,0,0.6);">-</span>
+            <div style="font-size: 26px; margin: 15px 0; font-weight: bold; letter-spacing: 1px;">
+                ANALYSIS RESULT: <span id="predictResult" style="color:var(--gold); text-shadow: 0 0 15px rgba(255,204,0,0.6);">-</span>
             </div>
             
             <div style="font-size: 18px; margin: 15px 0; font-weight: bold; color: #fff;">
-                AI TARGET NUMBER: <span id="predictNumber" class="num-badge">-</span>
+                TARGET NUMBER: <span id="predictNumber" class="num-badge">-</span>
             </div>
 
             <div style="font-size: 18px; font-weight: bold; color: #fff; margin-top: 12px;">
@@ -84,7 +84,7 @@
         </div>
 
         <div style="font-size:11px; color:#888; margin-top:15px; line-height: 1.5; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 6px;">
-            🔥 <strong>AI Loop Engine 53 Active:</strong> Auto-calculating target trends. Every parallel device displays exactly matched analytics instantly.
+            💎 <strong>System Note:</strong> Continuous monitoring of data feeds is active. Round trends are automatically sequence-locked to ensure data integrity during real-time updates.
         </div>
     </div>
 
@@ -102,7 +102,7 @@
                 });
                 const data = await res.json();
                 if(data.status !== 'approved') {
-                    alert('Session terminated or expired by Admin Control!');
+                    alert('Session terminated or expired by Management Control!');
                     localStorage.removeItem('user_uid');
                     window.location.href = 'index.html';
                 }
