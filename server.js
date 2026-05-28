@@ -15,7 +15,6 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Admin Secret Key Setup
 const ADMIN_SECRET_TOKEN = "OWNER_SECRET_KEY_9988";
 
 app.get('/admin.html', (req, res) => {
@@ -26,38 +25,46 @@ app.get('/admin.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
-// Server Storage Matrix
+// App Storage Systems
 let uids = {}; 
-let strictHistoryLog = []; // Dedicated rolling database queue for exact 50 rounds
-let currentUpcomingPeriod = "Loading..."; 
-let globalPrediction = { period: "Syncing...", result: "-", color: "-", number: "-", timestamp: "" };
+let strictHistoryLog = []; 
+let globalPrediction = { period: "Fetching Live...", result: "-", color: "-", number: "-", timestamp: "" };
 
 const GAME_API = "https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json?pageNo=1&pageSize=50&gameId=1";
 
-// Internal Pattern Formula Execution
+// SAFE LARGE PERIOD INCREMENT ENGINE
+function calculateNextBigPeriod(currentPeriodStr) {
+    if (!currentPeriodStr) return "Error";
+    // Splitting the last 4 digits safely to handle Large Integer issues in Javascript
+    let basePart = currentPeriodStr.slice(0, -4); 
+    let lastFourDigits = currentPeriodStr.slice(-4); 
+    let incrementedDigits = parseInt(lastFourDigits) + 1;
+    
+    // Formatting back to maintain strict character padding rules
+    let finalFormattedDigits = incrementedDigits.toString().padStart(4, '0');
+    return basePart + finalFormattedDigits;
+}
+
 function executePatternAnalysis(upcomingPeriodStr) {
     if (strictHistoryLog.length === 0) return;
 
     let totalWeightedSum = 0;
     let recencyBiasValue = 0;
-    let periodSeed = parseInt(upcomingPeriodStr) || 0;
+    
+    // Extracting safe deterministic seed out of the massive string sequence safely
+    let periodSeedValue = parseInt(upcomingPeriodStr.slice(-6)) || 0;
 
-    // HIGH INTEL PATTERN DETECTION: Matrix looping over fixed rolling array data
     strictHistoryLog.forEach((game, index) => {
         let currentNum = parseInt(game.number || 0);
-        
-        // Dynamic exponential index-weight calculation (Newer entries get top priority)
         let weightFactor = Math.max(1, 15 - Math.floor(index / 3));
         totalWeightedSum += (currentNum * weightFactor);
         
-        // Target sequence bias check on the most immediate last 5 records
         if (index < 5) {
             recencyBiasValue += currentNum;
         }
     });
 
-    // Clean mathematical seed extraction algorithm
-    let complexFormulaSeed = (totalWeightedSum * 4 + recencyBiasValue * 7 + periodSeed) % 10000;
+    let complexFormulaSeed = (totalWeightedSum * 4 + recencyBiasValue * 7 + periodSeedValue) % 10000;
     let targetOutputNumber = Math.abs(complexFormulaSeed) % 10;
     
     let patternResultString = (targetOutputNumber >= 5) ? "BIG" : "SMALL";
@@ -73,9 +80,8 @@ function executePatternAnalysis(upcomingPeriodStr) {
         descriptiveColorData = "🔴 RED [लाल]";
     }
 
-    // Packing strictly synced accurate structural response data objects
     globalPrediction = {
-        period: upcomingPeriodStr, // Pure format length period strictly pulled from official stream
+        period: upcomingPeriodStr, // EXACT UNTOUCHED FULL LENGTH RAW API STRING VALUE
         result: patternResultString,
         color: descriptiveColorData,
         number: targetOutputNumber.toString(),
@@ -99,53 +105,44 @@ async function updatePrediction() {
             timeout: 4500
         });
 
-        // Strict API parsing format check matching data.list object schema
         if (response.data && response.data.data && response.data.data.list && response.data.data.list.length > 0) {
             const incomingApiList = response.data.data.list;
             
-            // Initialization Phase: Feed structure on initial server cold boot up
             if (strictHistoryLog.length === 0) {
                 strictHistoryLog = incomingApiList.slice(0, 50);
             } else {
-                // ROLLING ENGINE QUEUE OPERATION: Checking for fresh updates
                 const latestIncomingRound = incomingApiList[0];
                 const existingLoggedRound = strictHistoryLog[0];
 
                 if (latestIncomingRound.issueNumber !== existingLoggedRound.issueNumber) {
-                    // 1. Insert newly finished API record directly at Index 0 (Top)
                     strictHistoryLog.unshift(latestIncomingRound);
-                    
-                    // 2. Strict popping rule to clean out anything beyond the 50 limit buffer
                     if (strictHistoryLog.length > 50) {
                         strictHistoryLog = strictHistoryLog.slice(0, 50);
                     }
                 }
             }
 
-            // Syncing absolute target upcoming index
-            let activeApiPeriodInt = parseInt(strictHistoryLog[0].issueNumber);
-            currentUpcomingPeriod = (activeApiPeriodInt + 1).toString();
+            // PURE STRING ASSIGNMENT: Prevents any JS parse integer mathematical rounding corruption
+            let rawApiPeriodStr = strictHistoryLog[0].issueNumber.toString();
+            let upcomingUpcomingPeriodStr = calculateNextBigPeriod(rawApiPeriodStr);
 
-            // Run analytical evaluation calculations on current rolling state data
-            executePatternAnalysis(currentUpcomingPeriod);
+            executePatternAnalysis(upcomingUpcomingPeriodStr);
         }
     } catch (networkError) {
-        console.log("Telemetry Alert: Request handshake stream delayed. Internal buffer maintained smoothly.");
-        // Anti-Freeze execution layer if API drop happens momentarily
-        if (currentUpcomingPeriod !== "Loading...") {
-            executePatternAnalysis(currentUpcomingPeriod);
+        console.log("Telemetry Update Notice: API Request Handshake dropped/waiting.");
+        if (globalPrediction && globalPrediction.period !== "Fetching Live...") {
+            io.emit('predictionUpdate', globalPrediction);
         }
     }
 }
 
-// Rapid background interval cycle running every 2.0 seconds
 setInterval(updatePrediction, 2000);
 updatePrediction();
 
-// UID Gateways & Authorization Systems
+// Authorizations Core Systems
 app.post('/api/admin/uid', (req, res) => {
     const { token, uid, action, duration } = req.body;
-    if (token !== ADMIN_SECRET_TOKEN) return res.status(401).json({ error: 'Unauthorized Access' });
+    if (token !== ADMIN_SECRET_TOKEN) return res.status(401).json({ error: 'Unauthorized' });
 
     if (action === 'approve') {
         uids[uid] = { status: 'approved', expiry: Date.now() + (parseInt(duration) * 60 * 1000) };
@@ -157,13 +154,13 @@ app.post('/api/admin/uid', (req, res) => {
 });
 
 app.get('/api/admin/uids', (req, res) => {
-    if (req.query.token !== ADMIN_SECRET_TOKEN) return res.status(401).json({ error: 'Unauthorized Access' });
+    if (req.query.token !== ADMIN_SECRET_TOKEN) return res.status(401).json({ error: 'Unauthorized' });
     res.json(uids);
 });
 
 app.post('/api/user/verify', (req, res) => {
     const { uid } = req.body;
-    if (!uid) return res.json({ status: 'invalid', message: 'UID input empty!' });
+    if (!uid) return res.json({ status: 'invalid', message: 'UID empty!' });
     const match = uids[uid];
     if (!match) return res.json({ status: 'pending', message: 'UID Status: PENDING!' });
     if (Date.now() > match.expiry) {
@@ -178,4 +175,4 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Smart Rolling Matrix Network operating on port ${PORT}`));
+server.listen(PORT, () => console.log(`Pure String Processing system alive on port ${PORT}`));
