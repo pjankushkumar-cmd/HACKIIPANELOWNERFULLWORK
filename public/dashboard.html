@@ -121,12 +121,10 @@
         }
         startLocalTimer();
 
-        // Safe Matrix Realtime Sync Hook
         const socket = io();
         socket.on('predictionUpdate', (data) => {
             if(data && data.period) {
-                // Strict injection over UI element
-                document.getElementById('periodId').innerHTML = `Period: <span style="color:var(--neon-cyan); text-shadow: 0 0 10px var(--neon-cyan); font-weight:900; font-size:32px;">${data.period}</span>`;
+                document.getElementById('periodId').innerHTML = `Period: <span style="color:var(--neon-cyan); text-shadow: 0 0 10px var(--neon-cyan); font-weight:900; font-size:34px;">${data.period}</span>`;
                 document.getElementById('predictNumber').innerText = data.number || "-";
                 document.getElementById('colorResult').innerHTML = data.color || "-";
                 
