@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
-    <title>VIP HACKII  PANEL</title>
+    <title>VIP Premium Monitor Panel</title>
     <script src="/socket.io/socket.io.js"></script>
     <style>
         .timer-box {
@@ -43,10 +43,10 @@
         .num-badge {
             background: linear-gradient(135deg, #00e5ff, #0088cc);
             color: #000;
-            padding: 4px 16px;
+            padding: 4px 18px;
             border-radius: 6px;
             font-weight: 900;
-            font-size: 24px;
+            font-size: 26px;
             box-shadow: 0 0 12px var(--neon-cyan);
             display: inline-block;
         }
@@ -58,7 +58,7 @@
         <h2>LIVE REALTIME TREND MONITOR</h2>
         
         <p style="font-size: 13px; margin: 0; color: #ccc;">
-            <span class="blinking-dot"></span> Status: <span style="color:var(--neon-green); font-weight:bold;">LIVE API SYNC</span>
+            <span class="blinking-dot"></span> Status: <span style="color:var(--neon-green); font-weight:bold;">LIVE TELEMETRY CONNECTION</span>
         </p>
         <p style="font-size: 13px; margin: 5px 0 0 0;">Authorized Member UID: <span id="myUidDisplay" style="color:var(--neon-cyan); font-weight:bold;">-</span></p>
 
@@ -66,7 +66,7 @@
 
         <div class="prediction-box" style="border-color: var(--neon-cyan); box-shadow: 0 0 20px rgba(0, 229, 255, 0.2);">
             <h3 style="margin: 0 0 10px 0; font-size: 13px; color:#ff0055; letter-spacing: 1.5px; font-weight: bold;">⚡ UPCOMING NEXT ROUND ⚡</h3>
-            <h2 id="periodId" style="font-size: 30px; margin: 5px 0; color: #fff;">Period: <span style="color: var(--neon-cyan);">Connecting...</span></h2>
+            <h2 id="periodId" style="font-size: 28px; margin: 5px 0; color: #fff; font-family: monospace;">Period: <span style="color: var(--neon-cyan);">Connecting...</span></h2>
             
             <hr style="border:0; border-top: 1px solid rgba(255,255,255,0.1); margin: 15px 0;">
 
@@ -93,7 +93,6 @@
         if(!uid) { window.location.href = 'index.html'; }
         document.getElementById('myUidDisplay').innerText = uid || "-";
 
-        // Security check session validation 
         async function runSecurityLoop() {
             try {
                 const res = await fetch('/api/user/verify', {
@@ -103,7 +102,7 @@
                 });
                 const data = await res.json();
                 if(data.status !== 'approved') {
-                    alert('Session terminated or expired by Admin Control!');
+                    alert('Session terminated or expired by Admin Control Center!');
                     localStorage.removeItem('user_uid');
                     window.location.href = 'index.html';
                 }
@@ -111,32 +110,28 @@
         }
         setInterval(runSecurityLoop, 5000);
 
-        // Timer function completely synced to active system minute boundaries
         function startLocalTimer() {
             setInterval(() => {
                 const now = new Date();
                 const seconds = now.getSeconds();
                 const remainingSeconds = 60 - seconds;
-                
                 let displaySec = remainingSeconds < 10 ? "0" + remainingSeconds : remainingSeconds;
                 document.getElementById('timerDisplay').innerText = `⏳ Next Period Update In: 00:${displaySec}s`;
             }, 1000);
         }
         startLocalTimer();
 
-        // Realtime Web Socket synchronization management
         const socket = io();
         socket.on('predictionUpdate', (data) => {
             if(data && data.period && data.period !== "Connecting...") {
-                // Instantly inject the exact raw full format period string parsed by server logic
                 document.getElementById('periodId').innerHTML = `Period: <span style="color:var(--neon-cyan); text-shadow: 0 0 10px var(--neon-cyan);">${data.period}</span>`;
                 document.getElementById('predictNumber').innerText = data.number || "-";
                 document.getElementById('colorResult').innerHTML = data.color || "-";
                 
                 if(data.result === "BIG") {
-                    document.getElementById('predictResult').innerHTML = "🔥 BIG [बड़ा]";
+                    document.getElementById('predictResult').innerHTML = "🔥 BIG ";
                 } else if(data.result === "SMALL") {
-                    document.getElementById('predictResult').innerHTML = "⚡ SMALL [छोटा]";
+                    document.getElementById('predictResult').innerHTML = "⚡ SMALL ";
                 } else {
                     document.getElementById('predictResult').innerHTML = data.result || "-";
                 }
