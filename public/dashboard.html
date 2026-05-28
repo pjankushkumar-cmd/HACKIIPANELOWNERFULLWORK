@@ -58,7 +58,7 @@
         <h2>LIVE REALTIME TREND MONITOR</h2>
         
         <p style="font-size: 13px; margin: 0; color: #ccc;">
-            <span class="blinking-dot"></span> Status: <span style="color:var(--neon-green); font-weight:bold;">LIVE ROLLING DATA SYNC</span>
+            <span class="blinking-dot"></span> Status: <span style="color:var(--neon-green); font-weight:bold;">LIVE TELEMETRY ACTIVE</span>
         </p>
         <p style="font-size: 13px; margin: 5px 0 0 0;">Authorized Member UID: <span id="myUidDisplay" style="color:var(--neon-cyan); font-weight:bold;">-</span></p>
 
@@ -66,7 +66,7 @@
 
         <div class="prediction-box" style="border-color: var(--neon-cyan); box-shadow: 0 0 20px rgba(0, 229, 255, 0.2);">
             <h3 style="margin: 0 0 10px 0; font-size: 13px; color:#ff0055; letter-spacing: 1.5px; font-weight: bold;">⚡ UPCOMING NEXT ROUND ⚡</h3>
-            <h2 id="periodId" style="font-size: 28px; margin: 5px 0; color: #fff; font-family: monospace;">Period: <span style="color: var(--neon-cyan);">Syncing Matrix...</span></h2>
+            <h2 id="periodId" style="font-size: 24px; margin: 5px 0; color: #fff; font-family: monospace;">Period: <span style="color: var(--neon-cyan);">Loading Engine...</span></h2>
             
             <hr style="border:0; border-top: 1px solid rgba(255,255,255,0.1); margin: 15px 0;">
 
@@ -84,7 +84,7 @@
         </div>
 
         <div style="font-size:11px; color:#888; margin-top:15px; line-height: 1.5; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 6px;">
-            💎 <strong>System Note:</strong> Continuous monitoring of rolling data feeds is active. Round trends are automatically sequence-locked to ensure data integrity during real-time updates.
+            💎 <strong>System Note:</strong> Continuous monitoring of data feeds is active. Round trends are automatically sequence-locked to ensure data integrity during real-time updates.
         </div>
     </div>
 
@@ -121,11 +121,11 @@
         }
         startLocalTimer();
 
-        // Socket Engine Data Injection Hook
+        // Safe Websocket Synchronization Hook
         const socket = io();
         socket.on('predictionUpdate', (data) => {
-            if(data && data.period && data.period !== "Syncing...") {
-                document.getElementById('periodId').innerHTML = `Period: <span style="color:var(--neon-cyan); text-shadow: 0 0 10px var(--neon-cyan);">${data.period}</span>`;
+            if(data && data.period && data.period !== "Fetching Live...") {
+                document.getElementById('periodId').innerHTML = `Period: <span style="color:var(--neon-cyan); text-shadow: 0 0 10px var(--neon-cyan); font-size: 21px;">${data.period}</span>`;
                 document.getElementById('predictNumber').innerText = data.number || "-";
                 document.getElementById('colorResult').innerHTML = data.color || "-";
                 
