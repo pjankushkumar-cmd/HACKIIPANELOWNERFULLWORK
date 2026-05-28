@@ -25,34 +25,43 @@ app.get('/admin.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
-// App Storage Systems
+// App Storage Telemetry Systems
 let uids = {}; 
 let strictHistoryLog = []; 
-let globalPrediction = { period: "Fetching Live...", result: "-", color: "-", number: "-", timestamp: "" };
+
+// Anti-Freeze Baseline Config (Screen will display this instantly instead of "Loading...")
+let globalPrediction = { 
+    period: "0001", 
+    result: "BIG", 
+    color: "🟢 GREEN [हरा]", 
+    number: "7", 
+    timestamp: "00:00:00" 
+};
 
 const GAME_API = "https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json?pageNo=1&pageSize=50&gameId=1";
 
-// SAFE LARGE PERIOD INCREMENT ENGINE
-function calculateNextBigPeriod(currentPeriodStr) {
-    if (!currentPeriodStr) return "Error";
-    // Splitting the last 4 digits safely to handle Large Integer issues in Javascript
-    let basePart = currentPeriodStr.slice(0, -4); 
-    let lastFourDigits = currentPeriodStr.slice(-4); 
-    let incrementedDigits = parseInt(lastFourDigits) + 1;
+// STRICT LAST 4 DIGITS SEPARATOR ENGINE
+function parseAndIncrementLastFour(currentPeriodStr) {
+    if (!currentPeriodStr) return "0000";
     
-    // Formatting back to maintain strict character padding rules
-    let finalFormattedDigits = incrementedDigits.toString().padStart(4, '0');
-    return basePart + finalFormattedDigits;
+    // Cutting last 4 characters explicitly from the large string object
+    let lastFourDigits = currentPeriodStr.slice(-4); 
+    let incrementedValue = parseInt(lastFourDigits) + 1;
+    
+    // Normalizing loop edge cases if system crosses 9999
+    if (incrementedValue > 9999) {
+        incrementedValue = 0;
+    }
+    
+    return incrementedValue.toString().padStart(4, '0');
 }
 
-function executePatternAnalysis(upcomingPeriodStr) {
+function executePatternAnalysis(trimmedUpcomingPeriod) {
     if (strictHistoryLog.length === 0) return;
 
     let totalWeightedSum = 0;
     let recencyBiasValue = 0;
-    
-    // Extracting safe deterministic seed out of the massive string sequence safely
-    let periodSeedValue = parseInt(upcomingPeriodStr.slice(-6)) || 0;
+    let periodSeedValue = parseInt(trimmedUpcomingPeriod) || 0;
 
     strictHistoryLog.forEach((game, index) => {
         let currentNum = parseInt(game.number || 0);
@@ -80,8 +89,9 @@ function executePatternAnalysis(upcomingPeriodStr) {
         descriptiveColorData = "🔴 RED [लाल]";
     }
 
+    // Overwriting memory variables seamlessly without any structural breaks
     globalPrediction = {
-        period: upcomingPeriodStr, // EXACT UNTOUCHED FULL LENGTH RAW API STRING VALUE
+        period: trimmedUpcomingPeriod, // FORWARDING ONLY THE 4 DIGIT VALUE
         result: patternResultString,
         color: descriptiveColorData,
         number: targetOutputNumber.toString(),
@@ -102,7 +112,7 @@ async function updatePrediction() {
                 'Origin': 'https://draw.ar-lottery01.com',
                 'Connection': 'keep-alive'
             },
-            timeout: 4500
+            timeout: 4000
         });
 
         if (response.data && response.data.data && response.data.data.list && response.data.data.list.length > 0) {
@@ -122,24 +132,24 @@ async function updatePrediction() {
                 }
             }
 
-            // PURE STRING ASSIGNMENT: Prevents any JS parse integer mathematical rounding corruption
             let rawApiPeriodStr = strictHistoryLog[0].issueNumber.toString();
-            let upcomingUpcomingPeriodStr = calculateNextBigPeriod(rawApiPeriodStr);
+            let safeFourDigitUpcomingPeriod = parseAndIncrementLastFour(rawApiPeriodStr);
 
-            executePatternAnalysis(upcomingUpcomingPeriodStr);
+            executePatternAnalysis(safeFourDigitUpcomingPeriod);
         }
     } catch (networkError) {
-        console.log("Telemetry Update Notice: API Request Handshake dropped/waiting.");
-        if (globalPrediction && globalPrediction.period !== "Fetching Live...") {
+        // Network drops handled internally, stream is never disrupted on dashboard
+        if (globalPrediction && globalPrediction.period !== "0001") {
             io.emit('predictionUpdate', globalPrediction);
         }
     }
 }
 
+// Fixed rapid cycle system interval check loop
 setInterval(updatePrediction, 2000);
 updatePrediction();
 
-// Authorizations Core Systems
+// User Access Systems
 app.post('/api/admin/uid', (req, res) => {
     const { token, uid, action, duration } = req.body;
     if (token !== ADMIN_SECRET_TOKEN) return res.status(401).json({ error: 'Unauthorized' });
@@ -175,4 +185,4 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Pure String Processing system alive on port ${PORT}`));
+server.listen(PORT, () => console.log(`Engine processing strictly 4-digits array matrix on port ${PORT}`));
