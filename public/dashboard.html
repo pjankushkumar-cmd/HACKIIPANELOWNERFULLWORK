@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
-    <title>VIP Premium Monitor Panel</title>
+    <title>VIP HACKII  PANEL</title>
     <script src="/socket.io/socket.io.js"></script>
     <style>
         .timer-box {
@@ -62,11 +62,11 @@
         </p>
         <p style="font-size: 13px; margin: 5px 0 0 0;">Authorized Member UID: <span id="myUidDisplay" style="color:var(--neon-cyan); font-weight:bold;">-</span></p>
 
-        <div class="timer-box" id="timerDisplay">⏳ Next Period Update In: 00:00s</div>
+        <div class="timer-box" id="timerDisplay">⏳ Next Period Update In: --:--s</div>
 
         <div class="prediction-box" style="border-color: var(--neon-cyan); box-shadow: 0 0 20px rgba(0, 229, 255, 0.2);">
             <h3 style="margin: 0 0 10px 0; font-size: 13px; color:#ff0055; letter-spacing: 1.5px; font-weight: bold;">⚡ UPCOMING NEXT ROUND ⚡</h3>
-            <h2 id="periodId" style="font-size: 30px; margin: 5px 0; color: #fff;">Period: <span style="color: var(--neon-cyan);">Syncing...</span></h2>
+            <h2 id="periodId" style="font-size: 30px; margin: 5px 0; color: #fff;">Period: <span style="color: var(--neon-cyan);">Connecting...</span></h2>
             
             <hr style="border:0; border-top: 1px solid rgba(255,255,255,0.1); margin: 15px 0;">
 
@@ -93,7 +93,7 @@
         if(!uid) { window.location.href = 'index.html'; }
         document.getElementById('myUidDisplay').innerText = uid || "-";
 
-        // Security check loop
+        // Security check session validation 
         async function runSecurityLoop() {
             try {
                 const res = await fetch('/api/user/verify', {
@@ -111,7 +111,7 @@
         }
         setInterval(runSecurityLoop, 5000);
 
-        // Timer calculation logic matching system clock
+        // Timer function completely synced to active system minute boundaries
         function startLocalTimer() {
             setInterval(() => {
                 const now = new Date();
@@ -124,10 +124,11 @@
         }
         startLocalTimer();
 
-        // Fixed Realtime Sync Engine via Sockets
+        // Realtime Web Socket synchronization management
         const socket = io();
         socket.on('predictionUpdate', (data) => {
-            if(data && data.period && data.period !== "Syncing...") {
+            if(data && data.period && data.period !== "Connecting...") {
+                // Instantly inject the exact raw full format period string parsed by server logic
                 document.getElementById('periodId').innerHTML = `Period: <span style="color:var(--neon-cyan); text-shadow: 0 0 10px var(--neon-cyan);">${data.period}</span>`;
                 document.getElementById('predictNumber').innerText = data.number || "-";
                 document.getElementById('colorResult').innerHTML = data.color || "-";
