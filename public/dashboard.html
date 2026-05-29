@@ -28,7 +28,7 @@
             animation: blink 1s infinite;
         }
         @keyframes blink {
-            0 { opacity: 0.2; }
+            0% { opacity: 0.2; }
             50% { opacity: 1; }
             100% { opacity: 0.2; }
         }
@@ -121,7 +121,7 @@
         }
         startLocalTimer();
 
-        // Realtime Socket Interface Layer
+        // Safe Engine Matrix Interface Sync Connection
         const socket = io();
         socket.on('predictionUpdate', (data) => {
             if(data && data.period) {
