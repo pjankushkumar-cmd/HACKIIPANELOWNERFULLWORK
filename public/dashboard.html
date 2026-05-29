@@ -121,6 +121,7 @@
         }
         startLocalTimer();
 
+        // Establish structural websocket listener link
         const socket = io();
         socket.on('predictionUpdate', (data) => {
             if(data && data.period) {
