@@ -121,7 +121,6 @@
         }
         startLocalTimer();
 
-        // Realtime Data Transmission Receiver Layer
         const socket = io();
         socket.on('predictionUpdate', (data) => {
             if(data && data.period) {
