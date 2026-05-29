@@ -25,7 +25,7 @@ app.get('/admin.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
-// Production Storage Layers (Strict 50 Limits)
+// Production Storage Arrays (Strict Max 50 Limits)
 let uids = {}; 
 let strictHistoryLog = []; 
 
@@ -57,56 +57,78 @@ function calculateUpcomingPeriod(currentApiPeriodStr) {
     return incrementedValue.toString().padStart(4, '0');
 }
 
-// ADVANCED AI TREND LOGIC - STRICT TRACKING MANAGEMENT
+// ==========================================
+// ULTRA-HEAVY AI MULTI-LAYER PATTERN MATRIX
+// ==========================================
 function executePatternAnalysis(upcomingPeriodStr) {
     let targetOutputNumber = 5; 
     let periodSeedValue = parseInt(upcomingPeriodStr) || 0;
 
-    if (strictHistoryLog && strictHistoryLog.length >= 3) {
-        // Latest round extraction to check structural behavior
-        let lastRoundNumber = parseInt(strictHistoryLog[0].number || 0);
-        let lastRoundResult = (lastRoundNumber >= 5) ? "BIG" : "SMALL";
+    if (strictHistoryLog && strictHistoryLog.length >= 6) {
+        let numbers = strictHistoryLog.map(g => parseInt(g.number || 0));
+        let results = numbers.map(n => (n >= 5) ? "BIG" : "SMALL");
         
-        let secondLastNumber = parseInt(strictHistoryLog[1].number || 0);
-        let secondLastResult = (secondLastNumber >= 5) ? "BIG" : "SMALL";
+        // Pattern Weights Counters
+        let bigScore = 0;
+        let smallScore = 0;
 
-        // Extracting total distribution trends from all stored logs (Max 50)
-        let bigCount = 0;
-        let smallCount = 0;
-        strictHistoryLog.forEach(game => {
-            if (parseInt(game.number || 0) >= 5) { bigCount++; } else { smallCount++; }
-        });
-
-        // CORE ALIGNMENT ENGINE: Direct match logic to stop wrong predictions
-        // Continuous Trend Locking (Small -> Small / Big -> Big)
-        let primaryTrendResult = "SMALL";
-        if (lastRoundResult === secondLastResult) {
-            // Trend is continuing, lock the exact same outcome
-            primaryTrendResult = lastRoundResult;
-        } else {
-            // If alternating pattern breaks, base on the highest frequency weight
-            primaryTrendResult = (bigCount >= smallCount) ? "BIG" : "SMALL";
+        // 1. DRAGON / STREAK DETECTOR (Continuous Trend Weighting)
+        let consecutiveCount = 1;
+        for (let i = 0; i < results.length - 1; i++) {
+            if (results[i] === results[i + 1]) { consecutiveCount++; } else { break; }
+        }
+        if (consecutiveCount >= 3) {
+            // Strong trend continuation logic (Chase / Follow Pattern)
+            if (results[0] === "BIG") bigScore += 45; else smallScore += 45;
         }
 
-        // Generating safe matching target numbers based on trend results
-        let smallGroupNumbers = [0, 1, 2, 3, 4];
-        let bigGroupNumbers = [5, 6, 7, 8, 9];
+        // 2. ALTERNATE / ZIG-ZAG DETECTOR (B -> S -> B -> S)
+        let isAlternate = (results[0] !== results[1] && results[1] === results[2] && results[2] !== results[3]);
+        if (isAlternate) {
+            // Predict inversion trend smoothly
+            if (results[0] === "BIG") smallScore += 40; else bigScore += 40;
+        }
 
-        // Advanced mathematical seeds to select precise index from groups
-        let indexSeed = (lastRoundNumber + secondLastNumber + periodSeedValue) % 5;
+        // 3. MIRROR / SNAKE REVERSAL PATTERN SCANNER (e.g. B -> B -> S -> S -> B -> B)
+        let isMirrorPair = (results[0] === results[1] && results[1] !== results[2] && results[2] === results[3]);
+        if (isMirrorPair) {
+            if (results[0] === "BIG") smallScore += 35; else bigScore += 35;
+        }
 
-        if (primaryTrendResult === "BIG") {
-            targetOutputNumber = bigGroupNumbers[indexSeed];
+        // 4. HISTORICAL OVERALL DOMINANCE CALCULATOR (Full 50 Records Scan)
+        let totalBigs = results.filter(r => r === "BIG").length;
+        let totalSmalls = results.length - totalBigs;
+        if (totalBigs > totalSmalls) bigScore += 10; else smallScore += 10;
+
+        // 5. STATISTICAL FREQUENCY INTEGRATION (Hot / Cold Node)
+        let frequencyMap = Array(10).fill(0);
+        numbers.forEach(num => frequencyMap[num]++);
+        let hotNumber = frequencyMap.indexOf(Math.max(...frequencyMap));
+
+        // Final Decision Array Allocation
+        let aiTargetResult = "SMALL";
+        if (bigScore === smallScore) {
+            // Tie breaker via period variance seed
+            aiTargetResult = (periodSeedValue % 2 === 0) ? "BIG" : "SMALL";
         } else {
-            targetOutputNumber = smallGroupNumbers[indexSeed];
+            aiTargetResult = (bigScore > smallScore) ? "BIG" : "SMALL";
+        }
+
+        // Mapping candidate group index with exact Hot/Cold balance
+        let candidatePool = (aiTargetResult === "BIG") ? [5, 6, 7, 8, 9] : [0, 1, 2, 3, 4];
+        let selectionIndex = (numbers[0] + numbers[1] + hotNumber + periodSeedValue) % candidatePool.length;
+        targetOutputNumber = candidatePool[selectionIndex];
+
+        // Anti-Opposite Re-verification Lock
+        let finalCheck = (targetOutputNumber >= 5) ? "BIG" : "SMALL";
+        if (finalCheck !== aiTargetResult) {
+            targetOutputNumber = (aiTargetResult === "BIG") ? 8 : 3;
         }
 
     } else {
-        // Hardcoded mathematical safe fallback structure
-        targetOutputNumber = (periodSeedValue * 3 + 7) % 10;
+        targetOutputNumber = (periodSeedValue * 7 + 13) % 10;
     }
 
-    // Processing descriptive color maps properly
     let patternResultString = (targetOutputNumber >= 5) ? "BIG" : "SMALL";
     let descriptiveColorData = "";
     
@@ -149,18 +171,13 @@ async function updatePrediction() {
             const incomingApiList = response.data.data.list;
             
             if (strictHistoryLog.length === 0) {
-                // Strict initial loading setup up to max 50 rounds
-                strictHistoryLog = incomingApiList.slice(0, 50).reverse(); // Reverse makes it 001 to 050 format chronologically
-                strictHistoryLog.reverse(); // Bring back to top priority order
+                strictHistoryLog = incomingApiList.slice(0, 50);
             } else {
                 const latestIncomingRound = incomingApiList[0];
                 const existingLoggedRound = strictHistoryLog[0];
 
                 if (latestIncomingRound.issueNumber !== existingLoggedRound.issueNumber) {
-                    // Push newest element to index position 0
                     strictHistoryLog.unshift(latestIncomingRound);
-                    
-                    // Strict limit validation (If 51 arrives, slice down and maintain 50 items)
                     if (strictHistoryLog.length > 50) {
                         strictHistoryLog = strictHistoryLog.slice(0, 50);
                     }
@@ -180,11 +197,9 @@ async function updatePrediction() {
     }
 }
 
-// Fast evaluation loops active continuously
 setInterval(updatePrediction, 2000);
 updatePrediction();
 
-// Authorization Endpoint Controls
 app.post('/api/admin/uid', (req, res) => {
     const { token, uid, action, duration } = req.body;
     if (token !== ADMIN_SECRET_TOKEN) return res.status(401).json({ error: 'Unauthorized' });
@@ -220,4 +235,4 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Upgraded Realtime Trend Sync running on port ${PORT}`));
+server.listen(PORT, () => console.log(`Ultra Advanced Weight Matrix Engine running on port ${PORT}`));
